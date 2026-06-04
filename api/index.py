@@ -38,7 +38,7 @@ async def handle_chat_data(request: Request, protocol: str = Query('data')):
     response = StreamingResponse(
         stream_text(
             client,
-            "gpt-4.1-mini",
+            os.getenv("LLM_MODEL"),
             openai_messages,
             TOOL_DEFINITIONS,
             AVAILABLE_TOOLS,
