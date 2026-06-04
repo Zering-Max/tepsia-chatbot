@@ -10,6 +10,7 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 
 def stream_text(
     client: OpenAI,
+    model: str,
     messages: Sequence[ChatCompletionMessageParam],
     tool_definitions: Sequence[Dict[str, Any]],
     available_tools: Mapping[str, Callable[..., Any]],
@@ -32,7 +33,7 @@ def stream_text(
 
         stream = client.chat.completions.create(
             messages=messages,
-            model="gpt-4o",
+            model=model,
             stream=True,
             tools=tool_definitions,
         )
