@@ -1,7 +1,7 @@
 # App chatbot du projet Teps'IA
 
 Le projet part d'une base template de code de ce Github : https://github.com/vercel-labs/ai-sdk-preview-python-streaming
-Il s'agit d'un front-end constitué de briques NextJS & Tailwind et d'une partie requêtes API (dossier `/api`) fait en Python. Pour l'instant, l'app est déployée sur la branche main sur un compte Vercel (Zering-Max).
+Il s'agit d'un front-end constitué de briques NextJS & ReactJS & Tailwind et d'une partie requêtes API (dossier `/api`) fait en Python. Pour l'instant, l'app est déployée sur la branche main sur un compte Vercel (Zering-Max).
 
 ## Comment lancer l'app en local
 

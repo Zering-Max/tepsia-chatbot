@@ -2,7 +2,6 @@
 
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
 import { MultimodalInput } from "@/components/multimodal-input";
-// import { Overview } from "@/components/overview";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useChat, type CreateUIMessage, type UIMessage } from "@ai-sdk/react";
 import { toast } from "sonner";
