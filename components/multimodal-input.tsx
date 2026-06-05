@@ -7,7 +7,7 @@ type ChatRequestOptions = {
   body?: object;
   data?: any;
 };
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import type React from "react";
 import {
   useRef,
@@ -25,18 +25,18 @@ import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
-const suggestedActions = [
-  {
-    title: "What is the weather",
-    label: "in San Francisco?",
-    action: "What is the weather in San Francisco?",
-  },
-  {
-    title: "How is python useful",
-    label: "for AI engineers?",
-    action: "How is python useful for AI engineers?",
-  },
-];
+// const suggestedActions = [
+//   {
+//     title: "What is the weather",
+//     label: "in San Francisco?",
+//     action: "What is the weather in San Francisco?",
+//   },
+//   {
+//     title: "How is python useful",
+//     label: "for AI engineers?",
+//     action: "How is python useful for AI engineers?",
+//   },
+// ];
 
 export function MultimodalInput({
   chatId,
@@ -121,7 +121,7 @@ export function MultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {messages.length === 0 && (
+      {/* {messages.length === 0 && (
         <div className="grid sm:grid-cols-2 gap-2 w-full">
           {suggestedActions.map((suggestedAction, index) => (
             <motion.div
@@ -155,11 +155,11 @@ export function MultimodalInput({
             </motion.div>
           ))}
         </div>
-      )}
+      )} */}
 
       <Textarea
         ref={textareaRef}
-        placeholder="Send a message..."
+        placeholder="Posez votre question sur le projet..."
         value={input || ""}
         onChange={handleInput}
         className={cn(
