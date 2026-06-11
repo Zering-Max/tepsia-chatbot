@@ -2,7 +2,8 @@
 
 import { PreviewMessage, ThinkingMessage } from "@/components/message";
 import { MultimodalInput } from "@/components/multimodal-input";
-// import { Overview } from "@/components/overview";
+import { Overview } from "@/components/overview";
+import { SourcesDisclaimer } from "@/components/sources-disclaimer";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useChat, type CreateUIMessage, type UIMessage } from "@ai-sdk/react";
 import { toast } from "sonner";
@@ -36,14 +37,17 @@ export function Chat() {
       setInput("");
     }
   };
-  let intro = "Hello c'est Teps'IA !"
+  
   return (
     <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
+      {messages.length > 0 && <SourcesDisclaimer />}
       <div
         ref={messagesContainerRef}
         className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
       >
-        {messages.length === 0 && <div className="max-w-3xl mx-auto md:mt-20">{intro}</div>}
+        {messages.length === 0 && <Overview />}
+
+        {/* {messages.length > 0 && <SourcesDisclaimer />} */}
 
         {messages.map((message: UIMessage, index: number) => (
           <PreviewMessage

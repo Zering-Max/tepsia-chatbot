@@ -7,7 +7,7 @@ type ChatRequestOptions = {
   body?: object;
   data?: any;
 };
-// import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type React from "react";
 import {
   useRef,
@@ -25,18 +25,23 @@ import { ArrowUpIcon, StopIcon } from "./icons";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
-// const suggestedActions = [
-//   {
-//     title: "What is the weather",
-//     label: "in San Francisco?",
-//     action: "What is the weather in San Francisco?",
-//   },
-//   {
-//     title: "How is python useful",
-//     label: "for AI engineers?",
-//     action: "How is python useful for AI engineers?",
-//   },
-// ];
+type SuggestedQuestion = {
+  title: string,
+  label: string,
+  action: string
+}
+const suggestedQuestions = [
+  {
+    title: "Question sur le projet Tepsa",
+    label: "En quoi consiste le projet de Tepsa au Nord de Strasbourg ?",
+    action: "En quoi consiste le projet de Tepsa au Nord de Strasbourg ?",
+  },
+  {
+    title: "Question sur les oppositions au projet",
+    label: "Pourquoi l’opposition au projet de Tepsa est si large ?",
+    action: "Pourquoi l’opposition au projet de Tepsa est si large ?",
+  },
+];
 
 export function MultimodalInput({
   chatId,
@@ -121,15 +126,15 @@ export function MultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {/* {messages.length === 0 && (
-        <div className="grid sm:grid-cols-2 gap-2 w-full">
-          {suggestedActions.map((suggestedAction, index) => (
+      {messages.length === 0 && (
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          {suggestedQuestions.map((suggestedQuestion:SuggestedQuestion, index:number) => (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ delay: 0.05 * index }}
-              key={`suggested-action-${suggestedAction.title}-${index}`}
+              key={`suggested-action-${suggestedQuestion.title}-${index}`}
               className={index > 1 ? "hidden sm:block" : "block"}
             >
               <Button
@@ -140,30 +145,30 @@ export function MultimodalInput({
                     parts: [
                       {
                         type: "text",
-                        text: suggestedAction.action,
+                        text: suggestedQuestion.action,
                       },
                     ],
                   });
                 }}
-                className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+                className="text-left border rounded-xl px-4 py-3.5 text-xs sm:text-sm flex-1 gap-1 flex-col w-full h-auto justify-start items-start"
               >
-                <span className="font-medium">{suggestedAction.title}</span>
-                <span className="text-muted-foreground">
-                  {suggestedAction.label}
+                <span className="font-medium">{suggestedQuestion.title}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                  {suggestedQuestion.label}
                 </span>
               </Button>
             </motion.div>
           ))}
         </div>
-      )} */}
+      )}
 
       <Textarea
         ref={textareaRef}
-        placeholder="Posez votre question sur le projet..."
+        placeholder="Votre question sur le projet"
         value={input || ""}
         onChange={handleInput}
         className={cn(
-          "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-xl !text-base bg-muted",
+          "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-xl text-sm sm:!text-base bg-muted",
           className
         )}
         rows={3}
