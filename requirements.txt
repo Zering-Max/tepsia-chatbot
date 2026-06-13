@@ -25,4 +25,3 @@ uvicorn==0.38.0
 vercel==0.3.2
 vercel-sandbox==0.0.2
 vercel-sdk==0.0.8
-llama-index-core==0.11.7
