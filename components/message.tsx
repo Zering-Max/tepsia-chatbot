@@ -7,7 +7,6 @@ import { Streamdown } from "streamdown";
 import { SparklesIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
-import { Weather } from "./weather";
 
 export const PreviewMessage = ({
   message,
@@ -52,27 +51,7 @@ export const PreviewMessage = ({
                 if (state === "output-available" && output) {
                   return (
                     <div key={toolCallId}>
-                      {toolName === "get_current_weather" ? (
-                        <Weather weatherAtLocation={output} />
-                      ) : (
-                        <pre>{JSON.stringify(output, null, 2)}</pre>
-                      )}
-                    </div>
-                  );
-                }
-                // Show loading state while tool is executing
-                if (
-                  state === "input-streaming" ||
-                  state === "input-available"
-                ) {
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cn({
-                        skeleton: ["get_current_weather"].includes(toolName),
-                      })}
-                    >
-                      {toolName === "get_current_weather" ? <Weather /> : null}
+                      <pre>{JSON.stringify(output, null, 2)}</pre>
                     </div>
                   );
                 }
