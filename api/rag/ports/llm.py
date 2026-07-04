@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 
-from ..domain.models import Answer, SearchResult
+from ..domain.models import Answer, QuestionsEvent, SearchResult, StreamEvent
 
 
 class LLMProvider(ABC):
@@ -12,5 +12,9 @@ class LLMProvider(ABC):
     @abstractmethod
     async def generate_stream(
         self, query: str, sources: list[SearchResult]
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[StreamEvent]:
+        ...
+
+    @abstractmethod
+    async def generate_followup_questions(self, query: str, answer: str) -> QuestionsEvent:
         ...

@@ -1,6 +1,8 @@
 import json
+import logging
 import uuid
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from typing import List
 
 from dotenv import load_dotenv
@@ -10,6 +12,7 @@ from pydantic import BaseModel
 
 from .rag.adapters.llm.openai_llm import OpenAILLMProvider
 from .rag.container import build_llm_provider, build_retrieval_service
+from .rag.domain.models import SourcesEvent, TextDeltaEvent
 from .rag.services.retrieval_service import RetrievalService
 from .utils.prompt import ClientMessage, convert_to_openai_messages
 from .utils.stream import patch_response_with_headers
@@ -17,6 +20,8 @@ from .utils.stream import patch_response_with_headers
 from vercel.headers import set_headers
 
 load_dotenv(".env.local")
+
+logger = logging.getLogger(__name__)
 
 retrieval_service: RetrievalService | None = None
 llm_provider: OpenAILLMProvider | None = None
@@ -63,12 +68,37 @@ async def _rag_stream(query: str, protocol: str):
     yield sse({"type": "start", "messageId": message_id})
     yield sse({"type": "text-start", "id": "text-1"})
 
-    sources = await retrieval_service.retrieve(query)
-    async for token in llm_provider.generate_stream(query, sources):
-        yield sse({"type": "text-delta", "id": "text-1", "delta": token})
-
-    yield sse({"type": "text-end", "id": "text-1"})
-    yield sse({"type": "finish", "messageMetadata": {"finishReason": "stop"}})
+    try:
+        if not query.strip():
+            yield sse({
+                "type": "text-delta",
+                "id": "text-1",
+                "delta": "Veuillez poser une question pour que je puisse vous aider.",
+            })
+            yield sse({"type": "text-end", "id": "text-1"})
+        else:
+            sources = await retrieval_service.retrieve(query)
+            full_answer = ""
+            cited_sources: list[dict] = []
+            async for event in llm_provider.generate_stream(query, sources):
+                if isinstance(event, TextDeltaEvent):
+                    full_answer += event.delta
+                    yield sse({"type": "text-delta", "id": "text-1", "delta": event.delta})
+                elif isinstance(event, SourcesEvent):
+                    cited_sources = [asdict(source) for source in event.sources]
+            yield sse({"type": "text-end", "id": "text-1"})
+            if cited_sources:
+                yield sse({"type": "data-sources", "data": cited_sources})
+            questions_event = await llm_provider.generate_followup_questions(query, full_answer)
+            if questions_event.questions:
+                yield sse({"type": "data-questions", "data": questions_event.questions})
+        yield sse({"type": "finish", "messageMetadata": {"finishReason": "stop"}})
+    except Exception:
+        logger.exception("RAG stream failed for query: %r", query)
+        yield sse({
+            "type": "error",
+            "errorText": "Une erreur est survenue lors de la génération de la réponse.",
+        })
     yield "data: [DONE]\n\n"
 
 
