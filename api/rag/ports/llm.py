@@ -16,5 +16,7 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    async def generate_followup_questions(self, query: str, answer: str) -> QuestionsEvent:
+    async def generate_followup_questions(
+        self, query: str, answer: str, sources: list[SearchResult]
+    ) -> QuestionsEvent:
         ...

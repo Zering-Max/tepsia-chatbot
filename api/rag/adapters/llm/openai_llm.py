@@ -17,7 +17,7 @@ from ...domain.models import (
     TextChunkMetadata,
     TextDeltaEvent,
 )
-from ...domain.prompts import FOLLOWUP_QUESTIONS_PROMPT, RAG_SYSTEM_PROMPT
+from ...domain.prompts import FOLLOWUP_QUESTIONS_PROMPT, NO_INFO_SENTINEL, RAG_SYSTEM_PROMPT
 from ...ports.llm import LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -66,25 +66,38 @@ class OpenAILLMProvider(LLMProvider):
                 yield TextDeltaEvent(delta=delta)
         yield SourcesEvent(sources=self._extract_cited_sources(full_text, unique_sources))
 
-    async def generate_followup_questions(self, query: str, answer: str) -> QuestionsEvent:
-        """Generates suggested follow-up questions from a query and its answer.
+    async def generate_followup_questions(
+        self, query: str, answer: str, sources: list[SearchResult]
+    ) -> QuestionsEvent:
+        """Generates follow-up questions answerable from the retrieved passages.
 
-        Failures (API error, malformed JSON) are logged and yield an empty
-        event so the caller can degrade gracefully.
+        Skips the API call entirely when the answer contains the no-info
+        sentinel. Failures (API error, malformed JSON) are logged and yield
+        an empty event so the caller can degrade gracefully.
 
         Args:
             query: The original user question.
             answer: The generated answer text.
+            sources: Retrieved passages the questions must be answerable from.
 
         Returns:
             A QuestionsEvent with up to 3 follow-up questions (possibly empty).
         """
+        if NO_INFO_SENTINEL in answer:
+            return QuestionsEvent(questions=[])
         try:
+            unique_sources = self._deduplicate(sources)
             response = await self.async_openai_client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": FOLLOWUP_QUESTIONS_PROMPT.content},
-                    {"role": "user", "content": f"Question : {query}\n\nRéponse : {answer}"},
+                    {
+                        "role": "user",
+                        "content": (
+                            f"{self._build_user_message(query, unique_sources)}"
+                            f"\n\nRéponse : {answer}"
+                        ),
+                    },
                 ],
                 response_format={"type": "json_object"},
             )

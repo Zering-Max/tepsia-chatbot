@@ -89,7 +89,9 @@ async def _rag_stream(query: str, protocol: str):
             yield sse({"type": "text-end", "id": "text-1"})
             if cited_sources:
                 yield sse({"type": "data-sources", "data": cited_sources})
-            questions_event = await llm_provider.generate_followup_questions(query, full_answer)
+            questions_event = await llm_provider.generate_followup_questions(
+                query, full_answer, sources
+            )
             if questions_event.questions:
                 yield sse({"type": "data-questions", "data": questions_event.questions})
         yield sse({"type": "finish", "messageMetadata": {"finishReason": "stop"}})
