@@ -16,10 +16,27 @@ SPARSE_VECTOR_NAME = "sparse-vector"
 
 @dataclass
 class QdrantVectorStore(VectorStore):
+    """VectorStore backed by Qdrant Cloud.
+
+    Attributes:
+        async_qdrant_client: Async Qdrant client used for all operations.
+        collection_name: Name of the target Qdrant collection.
+    """
+
     async_qdrant_client: AsyncQdrantClient
     collection_name: str
 
     async def upsert_points(self, items: list[EmbeddedChunk]) -> None:
+        """Inserts or overwrites embedded chunks in Qdrant.
+
+        Waits for the server to confirm the write before returning.
+
+        Args:
+            items: Embedded chunks to insert or overwrite.
+
+        Raises:
+            UnexpectedResponse: If Qdrant rejects the operation.
+        """
         await self.async_qdrant_client.upsert(
             collection_name=self.collection_name,
             points=self._prepare_points(items),
@@ -27,6 +44,14 @@ class QdrantVectorStore(VectorStore):
         logger.info("Upserted %d points into '%s'.", len(items), self.collection_name)
 
     async def document_exists(self, doc_id: str) -> bool:
+        """Checks whether any chunk from a given document is already indexed.
+
+        Args:
+            doc_id: SHA-256 hash of the source file, stored in the payload as ``doc_id``.
+
+        Returns:
+            True if at least one point with this doc_id exists, False otherwise.
+        """
         points, _ = await self.async_qdrant_client.scroll(
             collection_name=self.collection_name,
             scroll_filter=Filter(
@@ -37,6 +62,15 @@ class QdrantVectorStore(VectorStore):
         return len(points) > 0
 
     async def dense_search(self, query_vector: list[float], k: int) -> list[SearchResult]:
+        """Searches the collection using dense vector similarity.
+
+        Args:
+            query_vector: Dense embedding of the query (1536-dim).
+            k: Number of results to return.
+
+        Returns:
+            Top-k results ordered by descending similarity score.
+        """
         response = await self.async_qdrant_client.query_points(
             collection_name=self.collection_name,
             query=query_vector,
@@ -95,6 +129,17 @@ class QdrantVectorStore(VectorStore):
 
     @staticmethod
     def _to_search_result(point: ScoredPoint) -> SearchResult:
+        """Converts a Qdrant ScoredPoint into a domain SearchResult.
+
+        Args:
+            point: A scored point returned by a Qdrant query.
+
+        Returns:
+            A SearchResult containing the reconstructed TextChunk and score.
+
+        Raises:
+            Exception: If the point has no payload.
+        """
         if point.payload is None:
             raise Exception("Qdrant point has no payload")
         p = point.payload
@@ -104,7 +149,7 @@ class QdrantVectorStore(VectorStore):
             page_end=p["page_end"],
             section_title=p["section_title"],
             file_name=p["file_name"],
-            file_path=p["file_path"],
+            link_preview=p.get("link_preview"),
         )
         chunk = TextChunk(
             id=str(point.id),
@@ -117,10 +162,28 @@ class QdrantVectorStore(VectorStore):
 
     @staticmethod
     def _prepare_points(items: list[EmbeddedChunk]) -> list[PointStruct]:
+        """Converts a list of EmbeddedChunks into Qdrant PointStructs.
+
+        Args:
+            items: Embedded chunks to convert.
+
+        Returns:
+            List of PointStructs ready for upsert.
+        """
         return [QdrantVectorStore._prepare_single_point(item) for item in items]
 
     @staticmethod
     def _prepare_single_point(item: EmbeddedChunk) -> PointStruct:
+        """Converts a single EmbeddedChunk into a Qdrant PointStruct.
+
+        Uses named-vector format required by collections with multiple vector spaces.
+
+        Args:
+            item: Embedded chunk containing text, metadata, and dense vector.
+
+        Returns:
+            A PointStruct ready for upsert.
+        """
         payload = {
             "doc_id": item.chunk.document_id,
             "chunk_index": item.chunk.chunk_index,
@@ -129,10 +192,11 @@ class QdrantVectorStore(VectorStore):
             "page_end": item.chunk.metadata.page_end,
             "section_title": item.chunk.metadata.section_title,
             "file_name": item.chunk.metadata.file_name,
-            "file_path": str(item.chunk.metadata.file_path),
+            "link_preview": item.chunk.metadata.link_preview,
         }
         return PointStruct(
             id=item.chunk.id,
             vector={DENSE_VECTOR_NAME: item.dense.vector, SPARSE_VECTOR_NAME: models.Document(text=item.chunk.content, model="Qdrant/bm25")},
             payload=payload,
         )
+
