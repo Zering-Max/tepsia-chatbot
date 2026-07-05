@@ -1,4 +1,6 @@
 annotated-types==0.7.0
+pydantic-settings>=2.14.1
+qdrant-client>=1.18.0
 anyio==4.11.0
 certifi==2025.10.5
 charset-normalizer==3.4.4
@@ -25,4 +27,3 @@ uvicorn==0.38.0
 vercel==0.3.2
 vercel-sandbox==0.0.2
 vercel-sdk==0.0.8
-llama-index-core==0.11.7

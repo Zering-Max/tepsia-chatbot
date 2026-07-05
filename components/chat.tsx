@@ -55,6 +55,8 @@ export function Chat() {
             chatId={chatId}
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
+            isLast={messages.length - 1 === index}
+            sendMessage={sendMessage}
           />
         ))}
 

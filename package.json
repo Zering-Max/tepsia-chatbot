@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "pip install -r requirements.txt && python -m uvicorn api.index:app --reload",
     "next-dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -22,7 +22,6 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "concurrently": "^8.0.1",
-    "date-fns": "^4.1.0",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "framer-motion": "^11.11.17",
