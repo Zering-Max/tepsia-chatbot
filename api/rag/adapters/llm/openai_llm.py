@@ -1,3 +1,11 @@
+"""OpenAI-backed LLM provider adapter.
+
+Implements the :class:`LLMProvider` port using OpenAI's chat completions API.
+Builds the grounded prompt from retrieved passages, generates answers (batch or
+streamed), extracts the ``[N]`` citations back into structured sources, and
+produces follow-up questions.
+"""
+
 import json
 import logging
 import re
@@ -5,7 +13,6 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
 from openai import AsyncOpenAI
-
 from ...domain.models import (
     Answer,
     CitedSource,
@@ -25,12 +32,31 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class OpenAILLMProvider(LLMProvider):
+    """LLM provider backed by the OpenAI chat completions API.
+
+    Attributes:
+        async_openai_client: Async OpenAI client used for chat completions.
+        model: Name of the chat model (e.g. ``"gpt-4.1-mini"``).
+    """
+
     async_openai_client: AsyncOpenAI
     model: str
 
     _CITATION_PATTERN = re.compile(r"\[(\d+(?:\s*,\s*\d+)*)\]")
 
     async def generate(self, query: Query, sources: list[SearchResult]) -> Answer:
+        """Generates a complete, non-streamed answer grounded in the sources.
+
+        Deduplicates the sources, calls the chat model once, and appends a
+        formatted list of the sources actually cited in the answer.
+
+        Args:
+            query: The user's question.
+            sources: Retrieved chunks used to ground the answer.
+
+        Returns:
+            The generated answer with its cited-sources footer.
+        """
         unique_sources = self._deduplicate(sources)
         response = await self.async_openai_client.chat.completions.create(
             model=self.model,
@@ -47,6 +73,21 @@ class OpenAILLMProvider(LLMProvider):
     async def generate_stream(
         self, query: Query, sources: list[SearchResult]
     ) -> AsyncIterator[StreamEvent]:
+        """Streams the answer token by token, then emits the cited sources.
+
+        Deduplicates the sources and streams the chat completion, yielding a
+        :class:`TextDeltaEvent` per content fragment. Once the stream ends, the
+        full text is scanned for ``[N]`` citations and a single
+        :class:`SourcesEvent` is emitted with the matching sources.
+
+        Args:
+            query: The user's question.
+            sources: Retrieved chunks used to ground the answer.
+
+        Yields:
+            A :class:`TextDeltaEvent` per token, followed by one
+            :class:`SourcesEvent` with the cited sources.
+        """
         unique_sources = self._deduplicate(sources)
         stream = await self.async_openai_client.chat.completions.create(
             model=self.model,

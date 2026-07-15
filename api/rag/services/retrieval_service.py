@@ -1,3 +1,9 @@
+"""Retrieval orchestration service.
+
+Coordinates the embedding port and the vector store port to turn a raw query
+into a ranked list of relevant chunks via hybrid search.
+"""
+
 from ..domain.models import TextChunk, DenseEmbedding, SearchResult
 from ..ports.embedding import DenseEmbedder
 from ..ports.vector_store import VectorStore

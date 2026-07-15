@@ -1,4 +1,11 @@
-from openai import AsyncOpenAI
+"""Dependency wiring for the RAG pipeline.
+
+Composition root that builds the concrete adapters from :data:`settings` and
+assembles them into the services the API depends on. The OpenAI client is
+imported from ``langfuse.openai`` so every LLM and embedding call is traced.
+"""
+
+from langfuse.openai import openai  # type: ignore[attr-defined]
 from qdrant_client import AsyncQdrantClient
 
 from .adapters.embedding.openai_embedder import OpenAIDenseEmbedder
@@ -9,7 +16,13 @@ from .services.retrieval_service import RetrievalService
 
 
 async def build_retrieval_service() -> RetrievalService:
-    openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
+    """Builds the retrieval service with its OpenAI and Qdrant adapters.
+
+    Returns:
+        A :class:`RetrievalService` wired with an OpenAI dense embedder and a
+        Qdrant vector store, configured from :data:`settings`.
+    """
+    openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
     embedder = OpenAIDenseEmbedder(
         client_openai=openai_client,
         model=settings.openai_embedding_model,
@@ -26,7 +39,12 @@ async def build_retrieval_service() -> RetrievalService:
 
 
 def build_llm_provider() -> OpenAILLMProvider:
-    openai_client = AsyncOpenAI(api_key=settings.openai_api_key)
+    """Builds the LLM provider with a traced OpenAI client.
+
+    Returns:
+        An :class:`OpenAILLMProvider` configured from :data:`settings`.
+    """
+    openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
     return OpenAILLMProvider(
         async_openai_client=openai_client,
         model=settings.llm_model,

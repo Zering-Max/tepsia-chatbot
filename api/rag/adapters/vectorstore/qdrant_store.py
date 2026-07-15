@@ -1,3 +1,10 @@
+"""Qdrant-backed vector store adapter.
+
+Implements the :class:`VectorStore` port against Qdrant Cloud. Collections use
+named vectors: a dense vector (OpenAI embeddings) and a sparse BM25 vector,
+combined at query time with Reciprocal Rank Fusion for hybrid search.
+"""
+
 import logging
 from dataclasses import dataclass
 

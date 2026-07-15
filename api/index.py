@@ -7,6 +7,7 @@ from typing import List
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, Request as FastAPIRequest
+from langfuse import get_client
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -32,7 +33,15 @@ async def lifespan(app: FastAPI):
     global retrieval_service, llm_provider
     retrieval_service = await build_retrieval_service()
     llm_provider = build_llm_provider()
+    try:
+        if get_client().auth_check():
+            logger.info("Langfuse connecté — tracing actif.")
+        else:
+            logger.warning("Langfuse : échec d'authentification — tracing inactif.")
+    except Exception:
+        logger.warning("Langfuse injoignable — tracing inactif.", exc_info=True)
     yield
+    get_client().flush()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -64,43 +73,51 @@ async def _rag_stream(query: str, protocol: str):
     def sse(payload: dict) -> str:
         return f"data: {json.dumps(payload, separators=(',', ':'))}\n\n"
 
+    langfuse = get_client()
     message_id = f"msg-{uuid.uuid4().hex}"
     yield sse({"type": "start", "messageId": message_id})
     yield sse({"type": "text-start", "id": "text-1"})
 
-    try:
-        if not query.strip():
+    with langfuse.start_as_current_observation(
+        name="rag-chat", as_type="span", input={"query": query}
+    ) as span:
+        full_answer = ""
+        try:
+            if not query.strip():
+                yield sse({
+                    "type": "text-delta",
+                    "id": "text-1",
+                    "delta": "Veuillez poser une question pour que je puisse vous aider.",
+                })
+                yield sse({"type": "text-end", "id": "text-1"})
+            else:
+                sources = await retrieval_service.retrieve(query)
+                cited_sources: list[dict] = []
+                async for event in llm_provider.generate_stream(query, sources):
+                    if isinstance(event, TextDeltaEvent):
+                        full_answer += event.delta
+                        yield sse({"type": "text-delta", "id": "text-1", "delta": event.delta})
+                    elif isinstance(event, SourcesEvent):
+                        cited_sources = [asdict(source) for source in event.sources]
+                yield sse({"type": "text-end", "id": "text-1"})
+                if cited_sources:
+                    yield sse({"type": "data-sources", "data": cited_sources})
+                questions_event = await llm_provider.generate_followup_questions(
+                    query, full_answer, sources
+                )
+                if questions_event.questions:
+                    yield sse({"type": "data-questions", "data": questions_event.questions})
+            yield sse({"type": "finish", "messageMetadata": {"finishReason": "stop"}})
+            span.update(output=full_answer)
+        except Exception:
+            logger.exception("RAG stream failed for query: %r", query)
+            span.update(level="ERROR", status_message="RAG stream failed")
             yield sse({
-                "type": "text-delta",
-                "id": "text-1",
-                "delta": "Veuillez poser une question pour que je puisse vous aider.",
+                "type": "error",
+                "errorText": "Une erreur est survenue lors de la génération de la réponse.",
             })
-            yield sse({"type": "text-end", "id": "text-1"})
-        else:
-            sources = await retrieval_service.retrieve(query)
-            full_answer = ""
-            cited_sources: list[dict] = []
-            async for event in llm_provider.generate_stream(query, sources):
-                if isinstance(event, TextDeltaEvent):
-                    full_answer += event.delta
-                    yield sse({"type": "text-delta", "id": "text-1", "delta": event.delta})
-                elif isinstance(event, SourcesEvent):
-                    cited_sources = [asdict(source) for source in event.sources]
-            yield sse({"type": "text-end", "id": "text-1"})
-            if cited_sources:
-                yield sse({"type": "data-sources", "data": cited_sources})
-            questions_event = await llm_provider.generate_followup_questions(
-                query, full_answer, sources
-            )
-            if questions_event.questions:
-                yield sse({"type": "data-questions", "data": questions_event.questions})
-        yield sse({"type": "finish", "messageMetadata": {"finishReason": "stop"}})
-    except Exception:
-        logger.exception("RAG stream failed for query: %r", query)
-        yield sse({
-            "type": "error",
-            "errorText": "Une erreur est survenue lors de la génération de la réponse.",
-        })
+        finally:
+            langfuse.flush()
     yield "data: [DONE]\n\n"
 
 
