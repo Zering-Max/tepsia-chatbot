@@ -21,6 +21,7 @@ export const PreviewMessage = ({
   isLast?: boolean;
   sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
 }) => {
+  console.log('MESSAGE', message)
   return (
     <motion.div
       className="w-full mx-auto max-w-3xl px-4 group/message"
