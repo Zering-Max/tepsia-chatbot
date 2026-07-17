@@ -4,7 +4,7 @@ import type { UIMessage, UseChatHelpers } from "@ai-sdk/react";
 import { motion } from "framer-motion";
 import { Streamdown } from "streamdown";
 
-import { SparklesIcon } from "./icons";
+import { TepsoutIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export const PreviewMessage = ({
   isLast?: boolean;
   sendMessage?: UseChatHelpers<UIMessage>["sendMessage"];
 }) => {
-  console.log('MESSAGE', message)
+
   return (
     <motion.div
       className="w-full mx-auto max-w-3xl px-4 group/message"
@@ -36,7 +36,7 @@ export const PreviewMessage = ({
       >
         {message.role === "assistant" && (
           <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-            <SparklesIcon size={14} />
+            <TepsoutIcon size={28} />
           </div>
         )}
 
@@ -159,7 +159,7 @@ export const ThinkingMessage = () => {
         )}
       >
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
+          <TepsoutIcon size={28} />
         </div>
 
         <div className="flex flex-col gap-2 w-full">
