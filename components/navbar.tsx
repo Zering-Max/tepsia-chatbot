@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "./ui/button";
-import { GitIcon, VercelIcon } from "./icons";
+import { GitIcon } from "./icons";
 import Link from "next/link";
 
 export const Navbar = () => {
@@ -10,13 +10,6 @@ export const Navbar = () => {
       <Link href="https://github.com/vercel-labs/ai-sdk-preview-python-streaming">
         <Button variant="outline">
           <GitIcon /> View Source Code
-        </Button>
-      </Link>
-
-      <Link href="https://vercel.com/new/clone?repository-url=https://github.com/vercel-labs/ai-sdk-preview-python-streaming">
-        <Button>
-          <VercelIcon />
-          Deploy with Vercel
         </Button>
       </Link>
     </div>
