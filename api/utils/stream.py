@@ -240,10 +240,25 @@ def patch_response_with_headers(
     response: StreamingResponse,
     protocol: str = "data",
 ) -> StreamingResponse:
-    """Apply the standard streaming headers expected by the Vercel AI SDK."""
+    """Applies the streaming headers expected by the Vercel AI SDK.
 
+    Sets the SSE headers the client needs to parse the stream, and disables
+    response transformation so tokens reach the browser incrementally. The
+    ``no-transform`` directive is essential: without it, an intermediary proxy
+    (the Next.js dev server, a CDN, an edge) gzip-compresses the SSE stream, and
+    gzip buffers its input before emitting a block. That buffering delays token
+    delivery and makes the whole answer appear at once instead of streaming.
+
+    Args:
+        response: The streaming response to mutate in place.
+        protocol: The Vercel AI protocol advertised to the client. When falsy,
+            the ``x-vercel-ai-protocol`` header is left untouched.
+
+    Returns:
+        The same response instance, with streaming headers applied.
+    """
     response.headers["x-vercel-ai-ui-message-stream"] = "v1"
-    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Cache-Control"] = "no-cache, no-transform"
     response.headers["Connection"] = "keep-alive"
     response.headers["X-Accel-Buffering"] = "no"
 

@@ -1,3 +1,12 @@
+"""Domain models for the RAG pipeline.
+
+Defines the immutable data structures that flow through ingestion, retrieval,
+and generation: parsed documents and pages, text chunks and their metadata,
+dense/sparse embeddings, search results, cited sources, streamed events, and
+versioned prompts. These types are framework-agnostic and carry no behaviour
+beyond small helpers.
+"""
+
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -212,21 +221,33 @@ class CitedSource:
 
 @dataclass(frozen=True)
 class TextDeltaEvent:
-    """A newly available fragment of the streamed answer text."""
+    """A newly available fragment of the streamed answer text.
+
+    Attributes:
+        delta: The incremental text chunk emitted by the model.
+    """
 
     delta: str
 
 
 @dataclass(frozen=True)
 class SourcesEvent:
-    """The final list of cited sources, available once generation is complete."""
+    """The final list of cited sources, available once generation is complete.
+
+    Attributes:
+        sources: Sources actually cited (via ``[N]``) in the generated answer.
+    """
 
     sources: list[CitedSource]
 
 
 @dataclass(frozen=True)
 class QuestionsEvent:
-    """Suggested follow-up questions, available once generation is complete."""
+    """Suggested follow-up questions, available once generation is complete.
+
+    Attributes:
+        questions: Up to three follow-up questions grounded in the passages.
+    """
 
     questions: list[str]
 

@@ -1,3 +1,18 @@
+"""Versioned prompts used by the RAG pipeline.
+
+Holds the system prompts sent to the LLM, each wrapped in a :class:`Prompt`
+with an explicit version so prompt changes are traceable:
+
+- ``RAG_SYSTEM_PROMPT``: grounds the assistant's answers in the retrieved
+  passages and enforces inline ``[N]`` citations.
+- ``FOLLOWUP_QUESTIONS_PROMPT``: generates up to three follow-up questions
+  answerable from the same passages, returned as JSON.
+
+``NO_INFO_SENTINEL`` is the exact sentence the model must return when the
+answer is absent from the corpus; the pipeline matches on it to skip
+follow-up generation.
+"""
+
 from .models import Prompt
 
 NO_INFO_SENTINEL = "Cette information n'est pas disponible dans les documents fournis."
