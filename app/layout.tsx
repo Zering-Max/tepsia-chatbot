@@ -9,6 +9,7 @@ const baseUrl = process.env.VERCEL_URL
   : "http://localhost:3000";
 
 export const metadata = {
+  metadataBase: new URL(baseUrl),
   title: "Teps'IA",
   description:
     "Tepsout AI Chatbot for the Tepsa industrial project using AI SDK Python Streaming template.",
