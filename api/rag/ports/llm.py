@@ -28,10 +28,15 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    async def generate_stream(
+    def generate_stream(
         self, query: str, sources: list[SearchResult]
     ) -> AsyncIterator[StreamEvent]:
         """Streams the answer as it is generated.
+
+        Declared as a plain ``def`` returning an async iterator, which is how an
+        async-generator method types correctly: implementations are ``async def``
+        generators, so calling this returns the iterator directly rather than a
+        coroutine that must be awaited.
 
         Args:
             query: The user's question.

@@ -20,9 +20,9 @@ from langfuse import get_client
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from .rag.adapters.llm.openai_llm import OpenAILLMProvider
 from .rag.container import build_llm_provider, build_retrieval_service
 from .rag.domain.models import SourcesEvent, TextDeltaEvent
+from .rag.ports.llm import LLMProvider
 from .rag.services.retrieval_service import RetrievalService
 from .utils.prompt import ClientMessage
 from .utils.stream import patch_response_with_headers
@@ -34,7 +34,7 @@ load_dotenv(".env.local")
 logger = logging.getLogger(__name__)
 
 retrieval_service: RetrievalService | None = None
-llm_provider: OpenAILLMProvider | None = None
+llm_provider: LLMProvider | None = None
 
 
 @asynccontextmanager

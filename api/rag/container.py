@@ -1,31 +1,32 @@
 """Dependency wiring for the RAG pipeline.
 
 Composition root that builds the concrete adapters from :data:`settings` and
-assembles them into the services the API depends on. The OpenAI client is
-imported from ``langfuse.openai`` so every LLM and embedding call is traced.
+assembles them into the services the API depends on. Embeddings and generation
+both run on Mistral; the Mistral adapters open their own Langfuse observations,
+since the ``langfuse.openai`` drop-in used previously does not cover this SDK.
 """
 
-from langfuse.openai import openai  # type: ignore[attr-defined]
+from mistralai.client import Mistral
 from qdrant_client import AsyncQdrantClient
 
-from .adapters.embedding.openai_embedder import OpenAIDenseEmbedder
-from .adapters.llm.openai_llm import OpenAILLMProvider
+from .adapters.embedding.mistral_embedder import MistralDenseEmbedder
+from .adapters.llm.mistral_llm import MistralLLMProvider
 from .adapters.vectorstore.qdrant_store import QdrantVectorStore
 from .config import settings
+from .ports.llm import LLMProvider
 from .services.retrieval_service import RetrievalService
 
 
 async def build_retrieval_service() -> RetrievalService:
-    """Builds the retrieval service with its OpenAI and Qdrant adapters.
+    """Builds the retrieval service with its Mistral and Qdrant adapters.
 
     Returns:
-        A :class:`RetrievalService` wired with an OpenAI dense embedder and a
+        A :class:`RetrievalService` wired with a Mistral dense embedder and a
         Qdrant vector store, configured from :data:`settings`.
     """
-    openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
-    embedder = OpenAIDenseEmbedder(
-        client_openai=openai_client,
-        model=settings.openai_embedding_model,
+    embedder = MistralDenseEmbedder(
+        mistral_client=Mistral(api_key=settings.mistral_api_key),
+        model=settings.mistral_embedding_model,
     )
     qdrant_client = AsyncQdrantClient(
         url=settings.qdrant_url,
@@ -38,14 +39,13 @@ async def build_retrieval_service() -> RetrievalService:
     return RetrievalService(embedder=embedder, vector_store=vector_store, top_k=8)
 
 
-def build_llm_provider() -> OpenAILLMProvider:
-    """Builds the LLM provider with a traced OpenAI client.
+def build_llm_provider() -> LLMProvider:
+    """Builds the Mistral-backed LLM provider.
 
     Returns:
-        An :class:`OpenAILLMProvider` configured from :data:`settings`.
+        A :class:`MistralLLMProvider` configured from :data:`settings`.
     """
-    openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
-    return OpenAILLMProvider(
-        async_openai_client=openai_client,
-        model=settings.llm_model,
+    return MistralLLMProvider(
+        mistral_client=Mistral(api_key=settings.mistral_api_key),
+        model=settings.mistral_llm_model,
     )
