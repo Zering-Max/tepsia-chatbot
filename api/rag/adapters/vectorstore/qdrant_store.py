@@ -1,7 +1,7 @@
 """Qdrant-backed vector store adapter.
 
 Implements the :class:`VectorStore` port against Qdrant Cloud. Collections use
-named vectors: a dense vector (OpenAI embeddings) and a sparse BM25 vector,
+named vectors: a dense vector (Mistral embeddings) and a sparse BM25 vector,
 combined at query time with Reciprocal Rank Fusion for hybrid search.
 """
 
@@ -72,7 +72,7 @@ class QdrantVectorStore(VectorStore):
         """Searches the collection using dense vector similarity.
 
         Args:
-            query_vector: Dense embedding of the query (1536-dim).
+            query_vector: Dense embedding of the query (1024-dim with mistral-embed).
             k: Number of results to return.
 
         Returns:
@@ -100,7 +100,7 @@ class QdrantVectorStore(VectorStore):
         fused with Reciprocal Rank Fusion (RRF).
 
         Args:
-            query_vector: Dense embedding of the query (1536-dim).
+            query_vector: Dense embedding of the query (1024-dim with mistral-embed).
             query_text: Raw query text, used for server-side BM25 inference.
             k: Number of results to return.
             prefetch_limit: Number of candidates retrieved per branch before

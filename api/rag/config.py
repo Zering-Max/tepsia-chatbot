@@ -1,7 +1,11 @@
 """Application settings for the RAG pipeline.
 
-Loads configuration (OpenAI, Qdrant) from the environment and ``.env`` files
+Loads configuration (Mistral, Qdrant) from the environment and ``.env`` files
 via pydantic-settings, and exposes a single shared :data:`settings` instance.
+
+The OpenAI fields are optional: the adapters are kept in the codebase to allow
+rolling back, but nothing builds them at startup any more, so the pipeline must
+boot without an OpenAI key.
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,9 +18,12 @@ class Settings(BaseSettings):
     ``.env.local``. Unknown variables are ignored.
 
     Attributes:
-        openai_api_key: API key for OpenAI (embeddings and chat).
+        mistral_api_key: API key for Mistral (embeddings and chat).
+        mistral_embedding_model: Name of the Mistral embedding model.
+        mistral_llm_model: Name of the Mistral chat model used for generation.
+        openai_api_key: API key for OpenAI, only needed by the unused adapters.
         openai_embedding_model: Name of the OpenAI embedding model.
-        llm_model: Name of the OpenAI chat model used for generation.
+        llm_model: Name of the OpenAI chat model.
         qdrant_url: Base URL of the Qdrant instance.
         qdrant_api_key: API key for the Qdrant instance.
         qdrant_collection_name: Name of the target Qdrant collection.
@@ -28,8 +35,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    openai_api_key: str
-    openai_embedding_model: str
+    mistral_api_key: str
+    mistral_embedding_model: str = "mistral-embed"
+    mistral_llm_model: str = "mistral-medium-latest"
+
+    openai_api_key: str | None = None
+    openai_embedding_model: str | None = None
     llm_model: str = "gpt-4.1-mini"
 
     qdrant_url: str

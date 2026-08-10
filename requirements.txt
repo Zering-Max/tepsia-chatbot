@@ -13,7 +13,16 @@ httpx==0.28.1
 idna==3.11
 jiter==0.11.1
 langfuse==4.13.0
+mistralai==2.9.1
 openai==2.6.0
+# mistralai requires opentelemetry-semantic-conventions <0.61, while the
+# opentelemetry-sdk 1.43.0 that langfuse pulls in by default requires ==0.64b0.
+# langfuse itself accepts >=1.33.1,<2, so the OTel stack is pinned to a version
+# both agree on. Bumping langfuse may require revisiting these four pins.
+opentelemetry-api==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-semantic-conventions==0.60b1
+opentelemetry-exporter-otlp-proto-http==1.39.1
 pydantic==2.12.3
 pydantic_core==2.41.4
 python-dotenv==1.1.1

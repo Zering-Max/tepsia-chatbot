@@ -4,7 +4,7 @@ Organised as a hexagonal architecture:
 
 - ``domain``: framework-agnostic models, prompts, and exceptions.
 - ``ports``: abstract interfaces the pipeline depends on.
-- ``adapters``: concrete implementations of the ports (OpenAI, Qdrant).
+- ``adapters``: concrete implementations of the ports (Mistral, Qdrant).
 - ``services``: application-level orchestration of the ports.
 - ``config``/``container``: settings and dependency wiring.
 """
