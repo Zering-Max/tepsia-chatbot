@@ -6,7 +6,7 @@ export const SourcesDisclaimer = () => {
   return (
     <motion.div
       key="sources-disclaimer"
-      className="max-w-3xl mx-auto mb-4"
+      className="max-w-3xl mx-auto mb-4 mt-2"
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}

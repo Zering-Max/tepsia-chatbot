@@ -43,7 +43,7 @@ export function Chat() {
       {messages.length > 0 && <SourcesDisclaimer />}
       <div
         ref={messagesContainerRef}
-        className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
+        className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-2"
       >
         {messages.length === 0 && <Overview />}
 
