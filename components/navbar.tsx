@@ -6,10 +6,10 @@ import Link from "next/link";
 
 export const Navbar = () => {
   return (
-    <div className="p-2 flex flex-row gap-2 justify-between">
+    <div className="sm:px-2 sm:pt-2 md:p-2 flex flex-row gap-2 justify-center">
       <Link href="https://github.com/vercel-labs/ai-sdk-preview-python-streaming">
         <Button variant="outline">
-          <GitIcon /> View Source Code
+          <GitIcon /> Voir le projet open-source
         </Button>
       </Link>
     </div>
