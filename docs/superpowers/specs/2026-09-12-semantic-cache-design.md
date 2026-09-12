@@ -93,7 +93,12 @@ def compute_cache_id(query: str) -> str:
     return str(uuid.uuid5(CACHE_NAMESPACE, normalized))
 ```
 
-## Adapter Qdrant (`api/rag/adapters/vectorstore/qdrant_semantic_cache.py`)
+## Adapter Qdrant (`api/rag/adapters/semantic_cache/qdrant_semantic_cache.py`)
+
+Nouveau sous-dossier `adapters/semantic_cache/`, miroir de `ports/semantic_cache.py`
+— cohérent avec `adapters/embedding/` (port `DenseEmbedder`) et `adapters/llm/`
+(port `LLMProvider`), plutôt que de le loger sous `adapters/vectorstore/` qui
+est dédié aux implémentations du port `VectorStore`.
 
 Nouveau fichier, même style que `QdrantVectorStore` :
 
