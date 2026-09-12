@@ -7,7 +7,9 @@ versioned prompts. These types are framework-agnostic and carry no behaviour
 beyond small helpers.
 """
 
+import uuid
 from dataclasses import dataclass, replace
+from datetime import datetime
 from pathlib import Path
 
 
@@ -199,7 +201,6 @@ class Answer:
     sources: list[SearchResult]
     generated_answer: str
 
-
 @dataclass(frozen=True)
 class CitedSource:
     """A single source actually cited (via ``[N]``) in a generated answer.
@@ -239,6 +240,52 @@ class SourcesEvent:
     """
 
     sources: list[CitedSource]
+
+
+CACHE_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "tepsia-chatbot/semantic-cache")
+
+
+def compute_cache_id(query: str) -> str:
+    """Derives a deterministic id for a cached answer from its question.
+
+    Two calls with the same question (after trimming and lowercasing) return
+    the same id, so re-caching an identical question overwrites the existing
+    entry instead of accumulating duplicates.
+
+    Args:
+        query: The raw user question.
+
+    Returns:
+        A UUID5 string derived from the normalized question.
+    """
+    normalized = query.strip().lower()
+    return str(uuid.uuid5(CACHE_NAMESPACE, normalized))
+
+
+@dataclass(frozen=True)
+class CachedAnswer:
+    """A previously generated answer stored in the semantic cache.
+
+    Attributes:
+        id: Deterministic id from `compute_cache_id`, unique per normalized question.
+        date: UTC timestamp of when this entry was cached.
+        query: The original question this answer was generated for.
+        embedded_query: Dense embedding of `query`, used as the cache's search vector.
+        retrieved_chunk_ids: Ids of the chunks used to generate the answer, replayed
+            as `seedChunkIds` on a cache hit so follow-up grounding keeps working.
+        cited_sources: Sources actually cited in `generated_answer`.
+        generated_answer: The LLM-generated response text.
+        questions: Suggested follow-up questions for this answer.
+    """
+
+    id: str
+    date: datetime
+    query: Query
+    embedded_query: DenseEmbedding
+    retrieved_chunk_ids: list[str]
+    cited_sources: SourcesEvent
+    generated_answer: str
+    questions: list[str]
 
 
 @dataclass(frozen=True)
