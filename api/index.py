@@ -108,6 +108,9 @@ def _extract_last_user_query(messages: List[ClientMessage]) -> str:
     return ""
 
 
+MAX_SEED_CHUNK_IDS = 16
+
+
 def _extract_seed_chunk_ids(messages: List[ClientMessage]) -> list[str]:
     """Returns the seed chunk ids attached to the most recent user message.
 
@@ -115,13 +118,17 @@ def _extract_seed_chunk_ids(messages: List[ClientMessage]) -> list[str]:
     (see `components/message.tsx`), identifying the passages that grounded
     that question so they can be carried into its retrieval. A freely typed
     question, or malformed metadata, yields an empty list — the caller then
-    falls back to a plain fresh search.
+    falls back to a plain fresh search. The list is capped at
+    `MAX_SEED_CHUNK_IDS`: this field is client-supplied on an unauthenticated
+    endpoint, and an unbounded list would balloon both the Qdrant fetch and
+    the LLM prompt built from it.
 
     Args:
         messages: The chat history, oldest first.
 
     Returns:
-        The seed chunk ids, or an empty list if none are present/valid.
+        The seed chunk ids (capped at `MAX_SEED_CHUNK_IDS`), or an empty list
+        if none are present/valid.
     """
     for message in reversed(messages):
         if message.role == "user":
@@ -129,7 +136,7 @@ def _extract_seed_chunk_ids(messages: List[ClientMessage]) -> list[str]:
                 return []
             seed_ids = message.metadata.get("seedChunkIds")
             if isinstance(seed_ids, list) and all(isinstance(i, str) for i in seed_ids):
-                return seed_ids
+                return seed_ids[:MAX_SEED_CHUNK_IDS]
             return []
     return []
 
