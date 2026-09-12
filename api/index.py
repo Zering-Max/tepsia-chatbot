@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 
 from .rag.container import build_llm_provider, build_retrieval_service, build_semantic_cache
 from .rag.domain.models import CachedAnswer, DenseEmbedding, SourcesEvent, TextDeltaEvent, compute_cache_id
+from .rag.domain.prompts import NO_INFO_SENTINEL
 from .rag.ports.llm import LLMProvider
 from .rag.ports.semantic_cache import SemanticCache
 from .rag.services.retrieval_service import RetrievalService
@@ -229,7 +230,7 @@ async def _rag_stream(query: str, seed_chunk_ids: list[str]):
                             "seedChunkIds": cached.retrieved_chunk_ids,
                         },
                     })
-                    span.update(output=full_answer)
+                    span.update(output=full_answer, metadata={"cache_hit": True})
                     yield "data: [DONE]\n\n"
                     return
 
@@ -259,9 +260,9 @@ async def _rag_stream(query: str, seed_chunk_ids: list[str]):
                         "seedChunkIds": retrieved_chunk_ids,
                     },
                 })
-                span.update(output=full_answer)
+                span.update(output=full_answer, metadata={"cache_hit": False})
 
-                if full_answer.strip():
+                if full_answer.strip() and NO_INFO_SENTINEL not in full_answer:
                     try:
                         cache_vector = embedded_query or await retrieval_service.embed_query(query)
                         cached_answer = CachedAnswer(
