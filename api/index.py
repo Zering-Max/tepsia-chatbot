@@ -155,7 +155,7 @@ def _split_into_deltas(text: str, chunk_size: int = 40) -> list[str]:
         piece = word if i == 0 else " " + word
         if current and len(current) + len(piece) > chunk_size:
             deltas.append(current)
-            current = word
+            current = piece
         else:
             current += piece
     if current:
