@@ -39,6 +39,18 @@ class RetrievalService:
         self._vector_store = vector_store
         self._top_k = top_k
 
+    async def embed_query(self, query: str) -> DenseEmbedding:
+        """Embeds a bare query string, without running a search.
+
+        Args:
+            query: Natural-language question from the user.
+
+        Returns:
+            The dense embedding of `query`.
+        """
+        embedded = await self._embedder.embed(chunks=[TextChunk(content=query)])
+        return embedded[0]
+
     async def retrieve(
         self, query: str, seed_chunk_ids: list[str] | None = None
     ) -> list[SearchResult]:
