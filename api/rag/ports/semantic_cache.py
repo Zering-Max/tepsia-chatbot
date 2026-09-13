@@ -13,7 +13,7 @@ from ..domain.models import CachedAnswer, DenseEmbedding
 class SemanticCache(ABC):
     """Looks up and stores answers keyed by the semantic similarity of their question."""
 
-    SIMILARITY_THRESHOLD: float = 0.97
+    SIMILARITY_THRESHOLD: float = 0.90
 
     @abstractmethod
     async def check_similar_questions(self, embedded_query: DenseEmbedding) -> CachedAnswer | None:
