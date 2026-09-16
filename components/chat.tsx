@@ -37,7 +37,7 @@ export function Chat() {
       setInput("");
     }
   };
-  
+
   return (
     <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
       {messages.length > 0 && <SourcesDisclaimer />}
@@ -46,8 +46,6 @@ export function Chat() {
         className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-2"
       >
         {messages.length === 0 && <Overview />}
-
-        {/* {messages.length > 0 && <SourcesDisclaimer />} */}
 
         {messages.map((message: UIMessage, index: number) => (
           <PreviewMessage
