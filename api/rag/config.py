@@ -27,6 +27,7 @@ class Settings(BaseSettings):
         qdrant_url: Base URL of the Qdrant instance.
         qdrant_api_key: API key for the Qdrant instance.
         qdrant_collection_name: Name of the target Qdrant collection.
+        qdrant_cache_collection_name: Name of the Qdrant collection used by the semantic cache.
     """
 
     model_config = SettingsConfigDict(
@@ -46,6 +47,7 @@ class Settings(BaseSettings):
     qdrant_url: str
     qdrant_api_key: str
     qdrant_collection_name: str
+    qdrant_cache_collection_name: str
 
 
 settings = Settings()  # type: ignore[call-arg]

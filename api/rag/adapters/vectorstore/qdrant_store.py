@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 
 from qdrant_client import AsyncQdrantClient, models
-from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct, ScoredPoint
+from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct, Record, ScoredPoint
 
 from ...domain.models import EmbeddedChunk, SearchResult, TextChunk, TextChunkMetadata
 from ...ports.vector_store import VectorStore
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 DENSE_VECTOR_NAME = "dense-vector"
 SPARSE_VECTOR_NAME = "sparse-vector"
+SEED_SCORE = 1.0
 
 
 
@@ -134,12 +135,37 @@ class QdrantVectorStore(VectorStore):
         logger.info("Hybrid search returned %d results from '%s'.", len(results), self.collection_name)
         return results
 
-    @staticmethod
-    def _to_search_result(point: ScoredPoint) -> SearchResult:
-        """Converts a Qdrant ScoredPoint into a domain SearchResult.
+    async def get_by_ids(self, ids: list[str]) -> list[SearchResult]:
+        """Fetches specific chunks by id, without a similarity query.
 
         Args:
-            point: A scored point returned by a Qdrant query.
+            ids: Chunk ids to fetch.
+
+        Returns:
+            The matching chunks, scored at SEED_SCORE. Ids not found in the
+            collection are skipped.
+        """
+        if not ids:
+            return []
+        records = await self.async_qdrant_client.retrieve(
+            collection_name=self.collection_name,
+            ids=ids,
+            with_payload=True,
+        )
+        results = [self._to_search_result(record, score=SEED_SCORE) for record in records]
+        logger.info("Fetched %d/%d requested chunks by id from '%s'.", len(results), len(ids), self.collection_name)
+        return results
+
+    @staticmethod
+    def _to_search_result(point: ScoredPoint | Record, score: float | None = None) -> SearchResult:
+        """Converts a Qdrant point into a domain SearchResult.
+
+        Args:
+            point: A scored point from a query, or a plain record from a
+                by-id fetch.
+            score: Score to use when `point` has none (a `Record` from
+                `get_by_ids`). Ignored for `ScoredPoint`, which carries its
+                own score.
 
         Returns:
             A SearchResult containing the reconstructed TextChunk and score.
@@ -165,7 +191,8 @@ class QdrantVectorStore(VectorStore):
             chunk_index=p["chunk_index"],
             metadata=metadata,
         )
-        return SearchResult(chunk=chunk, score=point.score)
+        resolved_score = point.score if isinstance(point, ScoredPoint) else score
+        return SearchResult(chunk=chunk, score=resolved_score)
 
     @staticmethod
     def _prepare_points(items: list[EmbeddedChunk]) -> list[PointStruct]:

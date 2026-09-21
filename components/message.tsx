@@ -123,7 +123,12 @@ export const PreviewMessage = ({
                         variant="outline"
                         size="sm"
                         disabled={isLoading}
-                        onClick={() => sendMessage({ text: question })}
+                        onClick={() =>
+                          sendMessage({
+                            text: question,
+                            metadata: { seedChunkIds: (message.metadata as any)?.seedChunkIds ?? [] },
+                          })
+                        }
                         className="h-auto whitespace-normal text-left justify-start py-2"
                       >
                         {question}

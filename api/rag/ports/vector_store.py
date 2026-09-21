@@ -66,3 +66,22 @@ class VectorStore(ABC):
             Top-k results ordered by descending fused score.
         """
         pass
+
+    @abstractmethod
+    async def get_by_ids(self, ids: list[str]) -> list[SearchResult]:
+        """Fetches specific chunks by id, without a similarity query.
+
+        Used to re-include passages that grounded an earlier turn (e.g. the
+        passages behind a suggested follow-up question) when they might not
+        resurface in a fresh search on different query text.
+
+        Args:
+            ids: Chunk ids to fetch. Ids not present in the store are
+                silently skipped.
+
+        Returns:
+            The matching chunks, each with a synthetic score of 1.0 (there
+            is no similarity score for a direct fetch). Order is not
+            guaranteed to match the input order.
+        """
+        ...
