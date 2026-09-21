@@ -43,6 +43,7 @@ class ClientMessage(BaseModel):
     parts: Optional[List[ClientMessagePart]] = None
     experimental_attachments: Optional[List[ClientAttachment]] = None
     toolInvocations: Optional[List[ToolInvocation]] = None
+    metadata: Optional[dict] = None
 
 
 def convert_to_openai_messages(messages: List[ClientMessage]) -> List[ChatCompletionMessageParam]:

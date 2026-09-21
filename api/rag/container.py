@@ -11,9 +11,11 @@ from qdrant_client import AsyncQdrantClient
 
 from .adapters.embedding.mistral_embedder import MistralDenseEmbedder
 from .adapters.llm.mistral_llm import MistralLLMProvider
+from .adapters.semantic_cache.qdrant_semantic_cache import QdrantSemanticCache
 from .adapters.vectorstore.qdrant_store import QdrantVectorStore
 from .config import settings
 from .ports.llm import LLMProvider
+from .ports.semantic_cache import SemanticCache
 from .services.retrieval_service import RetrievalService
 
 
@@ -37,6 +39,22 @@ async def build_retrieval_service() -> RetrievalService:
         collection_name=settings.qdrant_collection_name,
     )
     return RetrievalService(embedder=embedder, vector_store=vector_store, top_k=8)
+
+
+def build_semantic_cache() -> SemanticCache:
+    """Builds the Qdrant-backed semantic cache.
+
+    Returns:
+        A :class:`QdrantSemanticCache` configured from :data:`settings`.
+    """
+    qdrant_client = AsyncQdrantClient(
+        url=settings.qdrant_url,
+        api_key=settings.qdrant_api_key,
+    )
+    return QdrantSemanticCache(
+        async_qdrant_client=qdrant_client,
+        collection_name=settings.qdrant_cache_collection_name,
+    )
 
 
 def build_llm_provider() -> LLMProvider:
