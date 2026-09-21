@@ -1,0 +1,17 @@
+[project]
+name = "tepsia-adddocuments"
+version = "0.1.0"
+description = "Ingestion de documents PDF depuis kDrive vers Qdrant (parsing Gemini, embeddings Mistral)."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-genai>=2.24.0",
+    "langchain-text-splitters>=1.1.2",
+    "mistralai>=2.10.1",
+    "pydantic-settings>=2.15.0",
+    "pypdf>=6.19.0",
+    "python-dotenv>=1.2.3",
+    "qdrant-client>=1.19.1",
+    "requests>=2.34.2",
+    "tenacity>=9.1.4",
+]
